@@ -11,7 +11,7 @@
 
 ### Typography: Gelasio (Serif) & Inter (Sans-Serif)
 
-### Architecture: Modular CSS with almost 1,400 lines of custom code.
+### Architecture: Modular CSS with more than 1,500 lines of custom code.
 
 ---
 
