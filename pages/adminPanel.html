@@ -48,7 +48,7 @@
             
 
                 <input class="input" type="number" id="carPrice" placeholder="Price">
-                <input class="input" type="text" id="carImage" placeholder="Image URL">
+                <input class="input" type="file" id="carImage" accept="image/*">
                 <input class="input" type="text" id="carEngine" placeholder="Engine (e.g. 3.5L V6 248hp)">
                 <input class="input" type="text" id="carTrimPackage" placeholder="Trim Package (e.g. EX L 4dr Mini Van)">
                 <input class="input" type="text" id="carBodyStyle" placeholder="Body Style (e.g. Minivan)">
@@ -95,6 +95,15 @@
         const provider = new GoogleAuthProvider();
         const db = getFirestore(app);
 
+        const fileToDataUrl = (file) => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = (error) => reject(error);
+                reader.readAsDataURL(file);
+            });
+        };
+
         // This runs automatically as soon as the page loads
         onAuthStateChanged(auth, (user) => {
             const loader = document.getElementById('loading-screen');
@@ -121,7 +130,7 @@
 
                 const requiredFields = [
                     'carMake', 'carModel', 'carYear', 'carMileage', 'carTransmission', 
-                    'carFuel', 'carDrivetrain', 'carPrice', 'carImage', 'carTrimPackage',
+                    'carFuel', 'carDrivetrain', 'carPrice', 'carTrimPackage',
                     'carBodyStyle', 'carEngine', 'carCityMpg', 'carHighwayMpg'
                 ];
 
@@ -134,55 +143,68 @@
                         return;
                     }
                 }
-
                 const originalText = submitButton.innerHTML;
                 submitButton.disabled = true;
-                submitButton.innerHTML = "Uploading... ⏳";
-
-                const carData = {
-                    make: document.getElementById('carMake').value,
-                    model: document.getElementById('carModel').value,
-                    year: document.getElementById('carYear').value,
-                    price: document.getElementById('carPrice').value,
-                    image: document.getElementById('carImage').value,
-                    mileage: document.getElementById('carMileage').value,
-                    transmission: document.getElementById('carTransmission').value,
-                    fuelType: document.getElementById('carFuel').value,
-                    drivetrain: document.getElementById('carDrivetrain').value,
-                    trimPackage: document.getElementById('carTrimPackage').value,
-                    bodyStyle: document.getElementById('carBodyStyle').value,
-                    engine: document.getElementById('carEngine').value,
-                    cityMpg: document.getElementById('carCityMpg').value,
-                    highwayMpg: document.getElementById('carHighwayMpg').value
-                };
+                submitButton.innerHTML = "Processing Image... ⏳"; // Changed text for clarity
 
                 try {
-                await addDoc(collection(db, "cars"), carData);
-                alert("Car added to 3M Auto Group inventory!");
+                    const fileInput = document.getElementById('carImage');
+                    
+                    const file = fileInput.files[0];
+
+                    if (file && file.size > 1048576) { // 1048576 bytes = 1MB
+                        alert("Image is too large! Please use a photo under 1MB.");
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = originalText;
+                        return;
+                    }
+
+                    let imageData = "";
+
+                    
+
+                    if (file) {
+                        imageData = await fileToDataUrl(file);
+                    } else {
+                        alert("Please select a car photo first!");
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = originalText;
+                        return;
+                    }
+
+                    const carData = {
+                        make: document.getElementById('carMake').value,
+                        model: document.getElementById('carModel').value,
+                        year: document.getElementById('carYear').value,
+                        price: document.getElementById('carPrice').value,
+                        image: imageData,
+                        mileage: document.getElementById('carMileage').value,
+                        transmission: document.getElementById('carTransmission').value,
+                        fuelType: document.getElementById('carFuel').value,
+                        drivetrain: document.getElementById('carDrivetrain').value,
+                        trimPackage: document.getElementById('carTrimPackage').value,
+                        bodyStyle: document.getElementById('carBodyStyle').value,
+                        engine: document.getElementById('carEngine').value,
+                        cityMpg: document.getElementById('carCityMpg').value,
+                        highwayMpg: document.getElementById('carHighwayMpg').value,
+                        createdAt: serverTimestamp() 
+                    };
+
+                    
+                    await addDoc(collection(db, "cars"), carData);
+                    alert("Car added successfully to 3M Auto Group!");
                 
-                // Clear the form
-                document.getElementById('carMake').value = "";
-                document.getElementById('carModel').value = "";
-                document.getElementById('carYear').value = "";
-                document.getElementById('carPrice').value = "";
-                document.getElementById('carImage').value = "";
-                document.getElementById('carMileage').value = "";
-                document.getElementById('carTransmission').value = "";
-                document.getElementById('carFuel').value = "";
-                document.getElementById('carDrivetrain').value = "";
-                document.getElementById('carTrimPackage').value = "";
-                document.getElementById('carBodyStyle').value = "";
-                document.getElementById('carEngine').value = "";
-                document.getElementById('carCityMpg').value = "";
-                document.getElementById('carHighwayMpg').value = "";
+                    fileInput.value = ""; 
+
                 } catch (error) {
                     console.error("Upload failed:", error);
-                    alert("Error: " + error.message);
+                    alert("Upload Error: " + error.message);
                 }
 
                 submitButton.disabled = false;
                 submitButton.innerHTML = originalText;
 
+                
 
             })
         };
