@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3M Auto Group</title>
+    
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>  
+    
+  <div id="loading-screen">Checking permissions...</div>
+  
+  <div id="admin-controls" class="dashboard" style="display: none;">
+        <h2>Add New Car to Inventory</h2>
+            <div class="dashboard" id="inputContainer">
+                <input class="input" type="text" id="carMake" placeholder="Make (e.g. Toyota)">
+                <input class="input" type="text" id="carModel" placeholder="Model (e.g. Camry)">
+                <input class="input" type="number" id="carYear" placeholder="Year (e.g. 2024)">
+
+                <input class="input" type="text" id="carMileage" placeholder="Mileage (e.g. 45,000)">
+                <select id="carTransmission" class="input">
+                    <option value="" disabled selected>Select Transmission</option>
+                    <option value="Automatic">Automatic</option>
+                    <option value="Manual">Manual</option>
+                    <option value="CVT">CVT</option>
+                </select>
+                <input class="input" type="text" id="carFuel" placeholder="Fuel (Gas/Hybrid/EV)">
+                <input class="input" type="text" id="carDrivetrain" placeholder="Drivetrain (AWD/FWD)">
+            
+
+                <input class="input" type="number" id="carPrice" placeholder="Price">
+                <input class="input" type="text" id="carImage" placeholder="Image URL">
+                <input class="input" type="text" id="carEngine" placeholder="Engine (e.g. 3.5L V6 248hp)">
+                <input class="input" type="text" id="carTrimPackage" placeholder="Trim Package (e.g. EX L 4dr Mini Van)">
+                <input class="input" type="text" id="carBodyStyle" placeholder="Body Style (e.g. Minivan)">
+                <input class="input" type="text" id="carCityMpg" placeholder="Car City MPG (e.g. 27)">
+                <input class="input" type="text" id="carHighwayMpg" placeholder="Car Highway MPG (e.g. 18)">
+            </div>
+
+        <button id="submitButton" class="btn" style="flex-direction: row;">Upload to Listings📤</button>
+
+             <div class="nav-button-row">
+            <a class="btn" href="../index.html" id="adminPanelToHome">Go to Home🏠</a>
+            <a href="listings.html" class="btn" id="adminPanelToListings">Go to Listings🛒</a>
+    </div>
+  </div>
+
+
+
+    
+    <script src="../main.js"></script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+        import { 
+            getAuth, 
+            signInWithPopup, 
+            GoogleAuthProvider,
+            onAuthStateChanged,
+            signOut 
+        } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC7P5QVOAH-xBY2tGWTSApoQaU8dRSfCvA",
+            authDomain: "mmm-auto-group-test.firebaseapp.com",
+            projectId: "mmm-auto-group-test",
+            storageBucket: "mmm-auto-group-test.firebasestorage.app",
+            messagingSenderId: "521394611759",
+            appId: "1:521394611759:web:1dae13828195b00748c8da"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+        const db = getFirestore(app);
+
+        // This runs automatically as soon as the page loads
+        onAuthStateChanged(auth, (user) => {
+            const loader = document.getElementById('loading-screen');
+            const controls = document.getElementById('admin-controls');
+
+            if (user && user.uid === "NYtvLyGUvhSfFtr0UpukSBwHGYr1") {
+                loader.style.display = "none";
+                controls.style.display = "block";
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+                onAuthStateChanged(auth, (user) => {
+            if (!user || user.uid !== "NYtvLyGUvhSfFtr0UpukSBwHGYr1") {
+                window.location.href = "../index.html";
+            }
+        });
+
+        const submitButton = document.getElementById('submitButton');
+
+        if(submitButton){
+            submitButton.addEventListener('click', async () => {
+
+                const requiredFields = [
+                    'carMake', 'carModel', 'carYear', 'carMileage', 'carTransmission', 
+                    'carFuel', 'carDrivetrain', 'carPrice', 'carImage', 'carTrimPackage',
+                    'carBodyStyle', 'carEngine', 'carCityMpg', 'carHighwayMpg'
+                ];
+
+                
+                for (const fieldId of requiredFields) {
+                    const value = document.getElementById(fieldId).value.trim();
+                    if (!value) {
+                        alert(`Please fill out the ${fieldId.replace('car', '')} field!`);
+                        document.getElementById(fieldId).focus(); // Jump to the empty box
+                        return;
+                    }
+                }
+
+                const originalText = submitButton.innerHTML;
+                submitButton.disabled = true;
+                submitButton.innerHTML = "Uploading... ⏳";
+
+                const carData = {
+                    make: document.getElementById('carMake').value,
+                    model: document.getElementById('carModel').value,
+                    year: document.getElementById('carYear').value,
+                    price: document.getElementById('carPrice').value,
+                    image: document.getElementById('carImage').value,
+                    mileage: document.getElementById('carMileage').value,
+                    transmission: document.getElementById('carTransmission').value,
+                    fuelType: document.getElementById('carFuel').value,
+                    drivetrain: document.getElementById('carDrivetrain').value,
+                    trimPackage: document.getElementById('carTrimPackage').value,
+                    bodyStyle: document.getElementById('carBodyStyle').value,
+                    engine: document.getElementById('carEngine').value,
+                    cityMpg: document.getElementById('carCityMpg').value,
+                    highwayMpg: document.getElementById('carHighwayMpg').value
+                };
+
+                try {
+                await addDoc(collection(db, "cars"), carData);
+                alert("Car added to 3M Auto Group inventory!");
+                
+                // Clear the form
+                document.getElementById('carMake').value = "";
+                document.getElementById('carModel').value = "";
+                document.getElementById('carYear').value = "";
+                document.getElementById('carPrice').value = "";
+                document.getElementById('carImage').value = "";
+                document.getElementById('carMileage').value = "";
+                document.getElementById('carTransmission').value = "";
+                document.getElementById('carFuel').value = "";
+                document.getElementById('carDrivetrain').value = "";
+                document.getElementById('carTrimPackage').value = "";
+                document.getElementById('carBodyStyle').value = "";
+                document.getElementById('carEngine').value = "";
+                document.getElementById('carCityMpg').value = "";
+                document.getElementById('carHighwayMpg').value = "";
+                } catch (error) {
+                    console.error("Upload failed:", error);
+                    alert("Error: " + error.message);
+                }
+
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalText;
+
+
+            })
+        };
+
+    </script>
+</body>    
+</html>

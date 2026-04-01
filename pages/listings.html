@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3M Auto Group</title>
+    
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>  
+    
+    <div id="listingsDashboard" class="dashboard">
+        <h1> Listings Page</h1>
+        <a href="../index.html" class="btn">Go back to home page🏠</a>
+        <div id="carGrid"></div>
+    </div>
+    
+    <script src="../main.js"></script>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import { 
+            getAuth, 
+            signInWithPopup, 
+            GoogleAuthProvider,
+            onAuthStateChanged,
+            signOut 
+    } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+    import { getFirestore, collection, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyC7P5QVOAH-xBY2tGWTSApoQaU8dRSfCvA",
+        authDomain: "mmm-auto-group-test.firebaseapp.com",
+        projectId: "mmm-auto-group-test",
+        storageBucket: "mmm-auto-group-test.firebasestorage.app",
+        messagingSenderId: "521394611759",
+        appId: "1:521394611759:web:1dae13828195b00748c8da"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    
+
+    // --- NEW DELETE FUNCTION ---
+    window.deleteCar = async function(carId) {
+        const currentUser = auth.currentUser;
+        const confirmation = confirm("Are you sure you want to delete this car from the 3M inventory?");
+        if (confirmation) {
+            if(currentUser.uid === "NYtvLyGUvhSfFtr0UpukSBwHGYr1"){
+                try {
+                    // Use the modular deleteDoc function
+                    await deleteDoc(doc(db, "cars", carId));
+                    alert("Listing deleted successfully!");
+                    location.reload(); 
+                } catch (error) {
+                    console.error("Error deleting document: ", error);
+                    alert("Error deleting: " + error.message);
+                }
+            } else{
+                alert("You do not have delete privilages");
+            }
+        }
+    };
+
+    (async () => {
+        const querySnapshot = await getDocs(collection(db, "cars"));
+        const carGrid = document.getElementById('carGrid');
+        let allCarsHTML = ""; // Better performance to build string first
+
+        querySnapshot.forEach((doc) => {
+            const car = doc.data();
+
+            const currentUser = auth.currentUser;
+
+            let deleteButtonHTML = "";
+
+            if (currentUser && currentUser.uid === "NYtvLyGUvhSfFtr0UpukSBwHGYr1") {
+            deleteButtonHTML = `
+               <button class="deleteButton" id="deleteListing" onclick="deleteCar('${doc.id}')">❌</button>`;
+            }
+
+
+            allCarsHTML += `
+                <div class="listingCard">
+                    <div class="frozenContent">
+                        <img src="${car.image}" alt="${car.make}" style="width: 300px;">
+                        <h3>${car.make} ${car.model} ${car.year}</h3>
+                        <p class="card-price">$${Number(car.price).toLocaleString()}</p>
+                        <div class="specs-grid">
+                            <span>🛣️ ${car.mileage} mi</span>
+                            <span>⚙️ ${car.transmission}</span>
+                            <span>⛽ ${car.fuelType}</span>
+                            <span>🚗 ${car.drivetrain}</span>
+                        </div>
+                    </div>
+                    <div class="revealContent">
+                        ${deleteButtonHTML}
+                        <h3>Trim Package: ${car.trimPackage}</h3>
+                        <h3>Body Style: ${car.bodyStyle}</h3>
+                        <h3>Engine: ${car.engine}</h3>
+                        <h3>City MPG: ${car.cityMpg} MPG</h3>
+                        <h3>Highway MPG: ${car.highwayMpg} MPG</h3>
+                        <a href="mailto:3mautogroup@gmail.com?subject=Interested%20In%20Purchasing%20a%20Car%20(ID%3A${doc.id})&body=ID%3A%20${doc.id}" class="standardLink">Email Us</a>
+                    </div>
+                </div>
+            `;
+        });
+        carGrid.innerHTML = allCarsHTML;
+    })();
+</script>
+</body>    
+</html>

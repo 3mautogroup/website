@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3M Auto Group</title>
+    
+    
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body> 
+    <div class="dashboard" id="documentsDashboard">
+        <a href="../index.html" class="standardLink">Home🏠</a>
+        <div class="grid-dashboard" id="pdfGrid">
+
+
+
+
+
+        </div>
+    </div> 
+
+<script>
+
+        //Creates an array of all the document files, makes it easier to construct the page functionally
+        const myFiles = [
+        "bill-of-sale.pdf",
+        "odometer-disclosure-statement.pdf",
+        "rebuilt-vehicle-disclosure.pdf",
+        "certificate-of-gross-retail-or-use-tax-paid.pdf",
+        "certificate-of-gross-retail-or-use-tax-paid-for-nonresident.pdf",
+        "application-for-certificate-of-title-for-a-vehicle.pdf",
+        "affidavit-for-certificate-of-title-correction.pdf",
+        "dealer-title-affidavit.pdf",
+        "limited-power-of-attorney.pdf",
+        "physical-inspection.pdf",
+        "one-and-the-same-person-affidavit.pdf",
+        "certificate-of-gross-retail-or-use-tax-paid-exemption.pdf",
+        "reassignment-of-a-vehicle-by-a-registered-dealer.pdf",
+        "certificate-of-repossession.pdf",
+        "certificate-of-gross-retail-or-use-tax-paid-on-the-purchase-for-nonresident.pdf",
+        "convenience-fee-disclosure.pdf",
+        "bill-of-sale-indiana-bmv.pdf"
+        ];
+
+        const grid = document.getElementById('pdfGrid');
+
+        // Loop through the list and create a button for each one
+        myFiles.forEach(fileName => {
+            const btn = document.createElement('button');
+            btn.className = 'grid-card';
+            
+            // Make the label look nice (remove .pdf and underscores), the capitalize transformation is in the style.css file
+            const label = fileName.replace('.pdf', '').replace(/-/g, ' ');
+            btn.innerText = label;
+
+            //Set the click action to open from your 'pdfs' folder
+            btn.onclick = () => {
+                window.open(`pdfs/${fileName}`, '_blank');
+            };
+
+            grid.appendChild(btn);
+        });
+</script>
+    
+    <script src="../main.js"></script>
+</body>    
+</html>

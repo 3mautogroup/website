@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3M Auto Group</title>
+    
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>  
+    
+    <div id="decipherIdDashboard" class="dashboard">
+        <h1> Decipher ID</h1>
+        <input class="input" type="text" id="carId" placeholder="Paste ID Code (e.g. 2ZJxj8WvEa86JD4Nmr8q)">
+        <div style="height: 20px;"></div>
+        <div id="decipheredCard"></div>
+        <button class="button" id="submitIdButton">Submit ID📤</button>
+        <a href="../index.html" class="standardLink" id="decipherToHome">Home Page🏠</a>
+    </div>
+    
+    <script src="../main.js"></script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+        import { 
+            getAuth, 
+            signInWithPopup, 
+            GoogleAuthProvider,
+            onAuthStateChanged,
+            signOut 
+        } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, serverTimestamp, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+        const firebaseConfig = {
+            apiKey: "AIzaSyC7P5QVOAH-xBY2tGWTSApoQaU8dRSfCvA",
+            authDomain: "mmm-auto-group-test.firebaseapp.com",
+            projectId: "mmm-auto-group-test",
+            storageBucket: "mmm-auto-group-test.firebasestorage.app",
+            messagingSenderId: "521394611759",
+            appId: "1:521394611759:web:1dae13828195b00748c8da"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+        const db = getFirestore(app);
+
+        const submitButton = document.getElementById('submitIdButton');
+        const decipheredCard = document.getElementById('decipheredCard')
+
+
+        if(submitButton){
+            submitButton.addEventListener('click', async () => {
+                
+                const idInput = document.getElementById('carId').value;
+
+                if(!idInput){
+                    alert("Please enter an ID first!");
+                    return;
+                }
+
+                const originalText = submitButton.innerHTML;
+                submitButton.disabled = true;
+                submitButton.innerHTML = "Uploading... ⏳";
+
+                
+                const docRef = doc(db, "cars", idInput);
+                const docSnap = await getDoc(docRef);
+
+                if(docSnap.exists()){
+
+                    const car = docSnap.data();
+                    const carHTML = `
+                    <div class="listingCard">
+                        <div class="frozenContent">
+                            <img src="${car.image}" alt="${car.make}" style="width: 300px;">
+                            <h3>${car.make} ${car.model} ${car.year}</h3>
+                            <p class="card-price">$${Number(car.price).toLocaleString()}</p>
+
+                            <div class="specs-grid">
+                                <span>🛣️ ${car.mileage} mi</span>
+                                <span>⚙️ ${car.transmission}</span>
+                                <span>⛽ ${car.fuelType}</span>
+                                <span>🚗 ${car.drivetrain}</span>
+                            </div>
+                        </div>
+
+                        <div class="revealContent">
+                            <button class="deleteButton" id="deleteListing" onclick="deleteCar('${doc.id}')">❌</button>
+                            <h3>Trim Package: ${car.trimPackage}</h3>
+                            <h3>Body Style: ${car.bodyStyle}</h3>
+                            <h3>Engine: ${car.engine}</h3>
+                            <h3>City MPG: ${car.cityMpg} MPG</h3>
+                            <h3>Highway MPG: ${car.highwayMpg} MPG</h3>
+                        
+                        </div>
+                    </div>
+                    `;
+
+                    decipheredCard.innerHTML = carHTML;
+                    document.getElementById('carId').value = "";
+                    
+                } else {
+                    alert("INVALID ID! TRY AGAIN.");
+                    document.getElementById('carId').value = "";
+                };
+                
+
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalText;
+
+            });
+        };
+
+    </script>
+</body>    
+</html>
